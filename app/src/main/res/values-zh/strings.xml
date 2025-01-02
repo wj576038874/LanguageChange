@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">LanguageChange</string>
+    <string name="hello">你好 世界</string>
+</resources>
