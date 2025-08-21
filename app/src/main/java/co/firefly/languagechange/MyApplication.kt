@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import java.util.Locale
 
 /**
@@ -31,4 +32,8 @@ class MyApplication : Application() {
 //        }
 //        updateLocale(this.applicationContext, Locale(currentLanguage))
     }
+
+//    override fun attachBaseContext(base: Context) {
+//        super.attachBaseContext(ContextCompat.getContextForLanguage(base))
+//    }
 }

@@ -1,5 +1,7 @@
 package co.firefly.languagechange
 
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.os.Bundle
 import android.os.LocaleList
 import android.util.Log
@@ -17,9 +19,9 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     private var currentLanguage = "zh"
-    private val availableLanguage = arrayOf("zh", "en", "ru", "ko", "ja")
+    private val availableLanguage = arrayOf("zh", "en", "ru", "ko", "ja", "si", "system")
     private val availableLanguageDisplayName =
-        arrayOf("Chinese", "English", "Russian", "korean", "Japanese")
+        arrayOf("Chinese", "English", "Russian", "korean", "Japanese", "Sri Lanka", "system")
 
     private lateinit var btnChangeLanguage: Button
 
@@ -41,6 +43,10 @@ class MainActivity : AppCompatActivity() {
         please consider using androidx. core. content.
         [ContextCompat.getString(Context, int) or androidx. core. content. ContextCompat.
         getContextForLanguage(Context).
+        注意：此 API 适用于 AppCompatActivity 上下文，不适用于 Android 12（API 级别 32）及更早版本的其他上下文。
+        如果需要在非 AppCompatActivity 上下文中获取符合每个应用语言环境的本地化字符串，
+        请考虑使用 androidx.core.content.
+        [ContextCompat.getString(Context, int) 或 androidx.core.content.ContextCompat.getContextForLanguage(Context)。
          */
         Log.e(
             "asd", "${
@@ -49,16 +55,44 @@ class MainActivity : AppCompatActivity() {
                 )
             }--${
                 ContextCompat.getContextForLanguage(applicationContext).getString(R.string.hello)
-            }--${getString(R.string.hello)} -- ${applicationContext.getString(R.string.hello)}"
+            }--${getString(R.string.hello)} -- ${applicationContext.getString(R.string.hello)} -- ${
+                ContextCompat.getString(
+                    this, R.string.hello
+                )
+            }"
         )
 
-        // 获取当前的语言
+        // 获取当前设置的语言
         currentLanguage = if (AppCompatDelegate.getApplicationLocales().isEmpty) {
-            Locale.getDefault().toLanguageTag()
+            // 如果没有设置应用语言，则使用系统默认语言
+            "system" //用来作为跟随系统语言的标志 设置的时候进行判断，如果选择system 则设置空集合代表跟随系统语言
         } else {
+            // 获取应用设置的语言
             AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag() ?: ""
         }
-        Log.e("asd", currentLanguage)
+
+        /**
+         * 如果没有设置过AppCompatDelegate.setApplicationLocales，则跟随系统语言，
+         * 假设系统当前是zh中文，那么第一次打开应用时，
+         * Locale.getDefault().toLanguageTag() = zh 会返回系统当前语言的语言标签，
+         * resources.getSystem().configuration.locales[0].toLanguageTag()=zh 也会返回系统当前语言的语言标签，
+         * AppCompatDelegate.getApplicationLocales()会返回空列表
+         * AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag() = null
+         *
+         * 如果设置过AppCompatDelegate.setApplicationLocales，则会返回设置的语言标签，假设设置为en英文，那么
+         * 那么 AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag() = en
+         * resources.getSystem().configuration.locales[0].toLanguageTag() = en
+         * Locale.getDefault().toLanguageTag() = en
+         */
+
+        //下面三种都是可以获取当前应用设置的语言
+        Log.e("asd0", currentLanguage)
+        //当前应用设置的语言 第一次打开系统是什么语言就获取的是什么语言 如果设置了则返回设置的语言标签，否则返回系统默认语言标签
+        Log.e("asd1", Locale.getDefault().toLanguageTag())
+        //当前应用设置的语言 第一次打开系统是什么语言就获取的是什么语言 如果设置了则返回设置的语言标签，否则返回系统默认语言标签
+        Log.e("asd2", Resources.getSystem().configuration.locales[0].toLanguageTag())
+        //当前应用设置的语言 如果没有设置过AppCompatDelegate.setApplicationLocales，则返回null
+        Log.e("asd3", AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag().toString())
 
         btnChangeLanguage.setOnClickListener {
             val current = availableLanguage.indexOf(currentLanguage)
@@ -67,25 +101,23 @@ class MainActivity : AppCompatActivity() {
                     currentLanguage = availableLanguage[which]
                 }.setPositiveButton("ok") { dialog, _ ->
                     dialog.cancel()
-                    AppCompatDelegate.setApplicationLocales(
-                        LocaleListCompat.forLanguageTags(
-                            currentLanguage
+                    if (currentLanguage == "system") {
+                        // 如果选择了系统语言，则使用系统默认语言 设置空集合即可
+                        // 设置之后AppCompatDelegate.getApplicationLocales() 会返回空列表
+                        AppCompatDelegate.setApplicationLocales(
+                            LocaleListCompat.getEmptyLocaleList()
                         )
-                    )
-                    //将applicationContext获取的语言也同步
-//                    val config = applicationContext.resources.configuration
-//                    val locale = Locale(currentLanguage)  // 设置为你需要的语言代码
-//                    config.setLocale(locale)
-//                    applicationContext.createConfigurationContext(config)
-//                    applicationContext.resources.updateConfiguration(config , applicationContext.resources.displayMetrics)
+                    } else {
+                        //否则直接使用选择的语言
+                        AppCompatDelegate.setApplicationLocales(
+                            LocaleListCompat.forLanguageTags(
+                                currentLanguage
+                            )
+                        )
+                    }
                 }.setNeutralButton("cancel") { dialog, _ ->
                     dialog.cancel()
                 }.show()
         }
-    }
-
-
-    private fun getApplicationContext2() {
-
     }
 }
